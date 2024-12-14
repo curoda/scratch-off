@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Scratch-off Demo</title>
+<style>
+  body {
+    font-family: sans-serif;
+    background: #f0f0f0;
+    padding: 20px;
+  }
+  
+  .scratch-card-container {
+    position: relative;
+    width: 300px;
+    height: 150px;
+    margin: 0 auto;
+    background: #fff;
+    box-shadow: 0 0 5px rgba(0,0,0,0.3);
+    user-select: none;
+  }
+
+  .scratch-card-container img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    cursor: crosshair;
+  }
+</style>
+</head>
+<body>
+
+<div class="scratch-card-container">
+  <!-- Hidden prize image -->
+  <img src="prize-image.jpg" alt="Prize Image" />
+  <!-- Scratchable canvas -->
+  <canvas id="scratchCanvas"></canvas>
+</div>
+
+<script>
+  // Configuration
+  const brushSize = 20;
+
+  // Get elements
+  const container = document.querySelector('.scratch-card-container');
+  const canvas = document.getElementById('scratchCanvas');
+  const img = container.querySelector('img');
+  const ctx = canvas.getContext('2d');
+
+  // Set canvas size to match the image
+  img.onload = () => {
+    canvas.width = img.width;
+    canvas.height = img.height;
+
+    // Fill canvas with overlay (e.g. gray)
+    ctx.fillStyle = '#ccc'; // adjust to desired scratch color
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
+
+  let isDrawing = false;
+
+  // Handle mouse/touch events
+  const startDrawing = (x, y) => {
+    isDrawing = true;
+    eraseAtPoint(x, y);
+  }
+
+  const stopDrawing = () => {
+    isDrawing = false;
+  }
+
+  const drawMove = (x, y) => {
+    if (!isDrawing) return;
+    eraseAtPoint(x, y);
+  }
+
+  const eraseAtPoint = (x, y) => {
+    // Use composite operation to remove overlay
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.beginPath();
+    ctx.arc(x, y, brushSize, 0, 2 * Math.PI);
+    ctx.fill();
+  }
+
+  // Mouse events
+  canvas.addEventListener('mousedown', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    startDrawing(e.clientX - rect.left, e.clientY - rect.top);
+  });
+
+  window.addEventListener('mouseup', stopDrawing);
+
+  canvas.addEventListener('mousemove', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    drawMove(e.clientX - rect.left, e.clientY - rect.top);
+  });
+
+  // Touch events for mobile
+  canvas.addEventListener('touchstart', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const touch = e.touches[0];
+    startDrawing(touch.clientX - rect.left, touch.clientY - rect.top);
+  });
+
+  canvas.addEventListener('touchend', stopDrawing);
+
+  canvas.addEventListener('touchmove', (e) => {
+    e.preventDefault(); // Prevent scrolling
+    const rect = canvas.getBoundingClientRect();
+    const touch = e.touches[0];
+    drawMove(touch.clientX - rect.left, touch.clientY - rect.top);
+  }, { passive: false });
+</script>
+</body>
+</html>
